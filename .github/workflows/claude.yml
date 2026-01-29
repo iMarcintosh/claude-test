@@ -9,6 +9,8 @@ on:
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
+  pull_request:
+    types: [opened, synchronize, labeled]
 
 jobs:
   claude:
@@ -16,43 +18,189 @@ jobs:
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
+      (github.event_name == 'pull_request')
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       issues: write
       id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Run Claude Code
-        id: claude
+      - name: Run Claude Code (Full Review)
+        if: |
+          github.event_name == 'pull_request' && 
+          contains(github.event.pull_request.labels.*.name, 'full-review')
+        id: claude-full
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Lies zuerst die Coding Guidelines aus .github/claude-guidelines.md
+            
+            Führe eine KOMPLETTE TypeScript React Review durch:
+            - Alle .ts und .tsx Dateien in diesem PR
+            - Type Coverage und Type Consistency
+            - React Best Practices im gesamten Code
+            - Performance-Probleme
+            - Accessibility Issues
+            
+            Prüfe besonders:
+            1. Type Safety - alle Props, State, Events korrekt typisiert
+            2. Keine any Types oder Type Assertions ohne Grund
+            3. React Hooks Dependencies
+            4. Event Handlers mit korrekten React Event Types
+            5. Einhaltung der Naming Conventions
+            
+            Kommentiere direkt in den Code-Zeilen bei Problemen.
 
-          # Optional: Customize the trigger phrase (default: @claude)
-          # trigger_phrase: "/claude"
+      - name: Run Claude Code (TypeScript Types Focus)
+        if: |
+          github.event_name == 'pull_request' && 
+          contains(github.event.pull_request.labels.*.name, 'review-types') &&
+          !contains(github.event.pull_request.labels.*.name, 'full-review')
+        id: claude-types
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Lies zuerst die Coding Guidelines aus .github/claude-guidelines.md
+            
+            FOKUS: TypeScript Type Safety Review (nur geänderte Zeilen)
+            
+            Prüfe ausschließlich:
+            1. ✅ Alle Props Interfaces/Types vollständig und korrekt
+            2. ✅ Keine `any` Types - verwende unknown oder konkrete Types
+            3. ✅ State Hooks korrekt typisiert: useState<Type>()
+            4. ✅ Event Handlers mit React.MouseEvent, React.ChangeEvent etc.
+            5. ✅ Return Types bei Functions explizit angegeben
+            6. ✅ API Response Types definiert
+            7. ✅ Generics korrekt verwendet
+            8. ✅ Union/Intersection Types sinnvoll eingesetzt
+            9. ✅ Optional Chaining (?.) wo sinnvoll
+            10. ✅ Type Guards bei Type Narrowing
+            
+            Ignoriere:
+            - Performance-Aspekte
+            - Styling
+            - Business Logic
+            
+            Kommentiere NUR bei Type-bezogenen Problemen.
 
-          # Optional: Trigger when specific user is assigned to an issue
-          # assignee_trigger: "claude-bot"
+      - name: Run Claude Code (Performance Focus)
+        if: |
+          github.event_name == 'pull_request' && 
+          contains(github.event.pull_request.labels.*.name, 'review-performance') &&
+          !contains(github.event.pull_request.labels.*.name, 'full-review')
+        id: claude-performance
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Lies zuerst die Coding Guidelines aus .github/claude-guidelines.md
+            
+            FOKUS: Performance Review (nur geänderte Zeilen)
+            
+            Prüfe ausschließlich Performance-Probleme:
+            
+            **React Performance:**
+            1. ❌ Unnötige Re-Renders
+            2. ❌ Inline Functions in JSX (besonders in Listen)
+            3. ❌ Fehlende useCallback für Event Handlers
+            4. ❌ Fehlende useMemo für teure Berechnungen
+            5. ❌ React.memo nicht verwendet bei Pure Components
+            6. ❌ Falsche Dependencies in useEffect/useMemo/useCallback
+            7. ❌ State Updates in Loops
+            
+            **JavaScript Performance:**
+            1. ❌ Ineffiziente Array-Operationen (mehrfaches .map/.filter)
+            2. ❌ Synchrone blocking Operations
+            3. ❌ Memory Leaks (Event Listeners nicht entfernt)
+            4. ❌ Große Objekte/Arrays im State
+            5. ❌ Unnötige Object/Array Kopien
+            
+            **Bundle Size:**
+            1. ❌ Große Libraries komplett importiert statt Tree-Shaking
+            2. ❌ Fehlende Code-Splitting/Lazy Loading
+            3. ❌ Duplicate Dependencies
+            
+            Ignoriere:
+            - Type Safety
+            - Code Style
+            - Business Logic
+            
+            Kommentiere NUR bei echten Performance-Problemen mit Verbesserungsvorschlägen.
 
-          # Optional: Configure Claude's behavior with CLI arguments
-          # claude_args: |
-          #   --model claude-opus-4-1-20250805
-          #   --max-turns 10
-          #   --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
-          #   --system-prompt "Follow our coding standards. Ensure all new code has tests. Use TypeScript for new files."
+      - name: Run Claude Code (Types + Performance Combined)
+        if: |
+          github.event_name == 'pull_request' && 
+          contains(github.event.pull_request.labels.*.name, 'review-types') &&
+          contains(github.event.pull_request.labels.*.name, 'review-performance') &&
+          !contains(github.event.pull_request.labels.*.name, 'full-review')
+        id: claude-types-performance
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Lies zuerst die Coding Guidelines aus .github/claude-guidelines.md
+            
+            KOMBINIERTER FOKUS: TypeScript Types + Performance (nur geänderte Zeilen)
+            
+            Prüfe beide Aspekte:
+            
+            **TypeScript Types:**
+            - Props/State/Events korrekt typisiert
+            - Keine any Types
+            - Return Types explizit
+            
+            **Performance:**
+            - Unnötige Re-Renders
+            - Fehlende Memoization
+            - Ineffiziente Array-Operationen
+            
+            Kommentiere bei Type- oder Performance-Problemen.
 
-          # Optional: Advanced settings configuration
-          # settings: |
-          #   {
-          #     "env": {
-          #       "NODE_ENV": "test"
-          #     }
-          #   }
+      - name: Run Claude Code (Changes Only - Default)
+        if: |
+          github.event_name == 'pull_request' && 
+          !contains(github.event.pull_request.labels.*.name, 'full-review') &&
+          !contains(github.event.pull_request.labels.*.name, 'skip-review') &&
+          !contains(github.event.pull_request.labels.*.name, 'review-types') &&
+          !contains(github.event.pull_request.labels.*.name, 'review-performance')
+        id: claude-changes
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Lies zuerst die Coding Guidelines aus .github/claude-guidelines.md
+            
+            Reviewe NUR die GEÄNDERTEN Zeilen (Diff) in diesem Pull Request.
+            Ignoriere unveränderten Code komplett.
+            
+            Prüfe die Änderungen auf:
+            1. Type Safety - neue/geänderte Types korrekt
+            2. Keine neuen any Types
+            3. React Hooks korrekt typisiert
+            4. Event Handlers mit React Event Types
+            5. Breaking Changes
+            6. Performance Implications der Änderungen
+            7. Einhaltung unserer Guidelines
+            
+            Kommentiere nur bei tatsächlichen Problemen in den geänderten Zeilen.
+
+      - name: Run Claude Code (Manual @claude mentions)
+        if: |
+          (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+          (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+          (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+          (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+        id: claude-manual
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
