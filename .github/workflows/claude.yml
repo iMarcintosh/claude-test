@@ -33,13 +33,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Read Full Review Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          contains(github.event.pull_request.labels.*.name, 'claude-full-review')
-        id: prompt-full
-        run: echo "content=$(cat .github/prompts/full-review.md)" >> $GITHUB_OUTPUT
-
       - name: Run Claude Code (Full Review)
         if: |
           github.event_name == 'pull_request' && 
@@ -47,16 +40,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-full.outputs.content }}
-
-      - name: Read Types Review Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          contains(github.event.pull_request.labels.*.name, 'claude-review-types') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-full-review') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-review-performance')
-        id: prompt-types
-        run: echo "content=$(cat .github/prompts/review-types.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/full-review.md
 
       - name: Run Claude Code (TypeScript Types Focus)
         if: |
@@ -67,16 +51,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-types.outputs.content }}
-
-      - name: Read Performance Review Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          contains(github.event.pull_request.labels.*.name, 'claude-review-performance') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-full-review') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-review-types')
-        id: prompt-performance
-        run: echo "content=$(cat .github/prompts/review-performance.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/review-types.md
 
       - name: Run Claude Code (Performance Focus)
         if: |
@@ -87,16 +62,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-performance.outputs.content }}
-
-      - name: Read Types + Performance Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          contains(github.event.pull_request.labels.*.name, 'claude-review-types') &&
-          contains(github.event.pull_request.labels.*.name, 'claude-review-performance') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-full-review')
-        id: prompt-types-performance
-        run: echo "content=$(cat .github/prompts/review-types-performance.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/review-performance.md
 
       - name: Run Claude Code (Types + Performance Combined)
         if: |
@@ -107,15 +73,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-types-performance.outputs.content }}
-
-      - name: Read Needs Tests Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          contains(github.event.pull_request.labels.*.name, 'claude-needs-tests') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-full-review')
-        id: prompt-needs-tests
-        run: echo "content=$(cat .github/prompts/needs-tests.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/review-types-performance.md
 
       - name: Run Claude Code (Test Coverage Check)
         if: |
@@ -125,14 +83,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-needs-tests.outputs.content }}
-
-      - name: Read Write Tests Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          contains(github.event.pull_request.labels.*.name, 'claude-write-tests')
-        id: prompt-write-tests
-        run: echo "content=$(cat .github/prompts/write-tests.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/needs-tests.md
 
       - name: Run Claude Code (Write Tests)
         if: |
@@ -141,19 +92,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-write-tests.outputs.content }}
-
-      - name: Read Changes Only Prompt
-        if: |
-          github.event_name == 'pull_request' && 
-          !contains(github.event.pull_request.labels.*.name, 'claude-full-review') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-skip-review') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-review-types') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-review-performance') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-needs-tests') &&
-          !contains(github.event.pull_request.labels.*.name, 'claude-write-tests')
-        id: prompt-changes
-        run: echo "content=$(cat .github/prompts/changes-only.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/write-tests.md
 
       - name: Run Claude Code (Changes Only - Default)
         if: |
@@ -167,16 +106,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-changes.outputs.content }}
-
-      - name: Read Manual Prompt
-        if: |
-          (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-          (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-          (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-          (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
-        id: prompt-manual
-        run: echo "content=$(cat .github/prompts/manual.md)" >> $GITHUB_OUTPUT
+          prompt_file: .github/prompts/changes-only.md
 
       - name: Run Claude Code (Manual @claude mentions)
         if: |
@@ -187,4 +117,4 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt-manual.outputs.content }}
+          prompt_file: .github/prompts/manual.md
