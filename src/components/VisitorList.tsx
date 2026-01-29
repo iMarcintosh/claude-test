@@ -9,9 +9,9 @@ interface VisitorListProps {
 function VisitorList({ visitors, onCheckOut }: VisitorListProps) {
   if (visitors.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-8 text-center">
-        <p className="text-gray-500 text-lg">Keine Besucher gefunden.</p>
-        <p className="text-gray-400 text-sm mt-1">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center transition-colors">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">Keine Besucher gefunden.</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
           Registrieren Sie einen neuen Besucher über das Formular oben.
         </p>
       </div>

@@ -11,17 +11,17 @@ function Stats({ visitors }: StatsProps) {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      <div className="bg-white rounded-lg shadow-md p-4 text-center">
-        <p className="text-3xl font-bold text-blue-600">{totalVisitors}</p>
-        <p className="text-gray-600 text-sm">Gesamt heute</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center transition-colors">
+        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{totalVisitors}</p>
+        <p className="text-gray-600 dark:text-gray-300 text-sm">Gesamt heute</p>
       </div>
-      <div className="bg-white rounded-lg shadow-md p-4 text-center">
-        <p className="text-3xl font-bold text-green-600">{checkedIn}</p>
-        <p className="text-gray-600 text-sm">Anwesend</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center transition-colors">
+        <p className="text-3xl font-bold text-green-600 dark:text-green-400">{checkedIn}</p>
+        <p className="text-gray-600 dark:text-gray-300 text-sm">Anwesend</p>
       </div>
-      <div className="bg-white rounded-lg shadow-md p-4 text-center">
-        <p className="text-3xl font-bold text-gray-600">{checkedOut}</p>
-        <p className="text-gray-600 text-sm">Ausgecheckt</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center transition-colors">
+        <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">{checkedOut}</p>
+        <p className="text-gray-600 dark:text-gray-300 text-sm">Ausgecheckt</p>
       </div>
     </div>
   )

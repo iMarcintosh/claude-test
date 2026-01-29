@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ThemeProvider } from './context/ThemeContext'
 import Header from './components/Header'
 import VisitorForm from './components/VisitorForm'
 import SearchBar from './components/SearchBar'
@@ -46,28 +47,30 @@ function App() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          <Stats visitors={visitors} />
-          <VisitorForm onAddVisitor={addVisitor} />
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            filter={filter}
-            onFilterChange={setFilter}
-          />
-          <VisitorList
-            visitors={filteredVisitors}
-            onCheckOut={checkOutVisitor}
-          />
-        </div>
-      </main>
-      <footer className="bg-gray-800 text-gray-400 text-center py-4 mt-8">
-        <p>&copy; {new Date().getFullYear()} Besuchermanagement System</p>
-      </footer>
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="space-y-6">
+            <Stats visitors={visitors} />
+            <VisitorForm onAddVisitor={addVisitor} />
+            <SearchBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              filter={filter}
+              onFilterChange={setFilter}
+            />
+            <VisitorList
+              visitors={filteredVisitors}
+              onCheckOut={checkOutVisitor}
+            />
+          </div>
+        </main>
+        <footer className="bg-gray-800 dark:bg-gray-950 text-gray-400 dark:text-gray-500 text-center py-4 mt-8 transition-colors">
+          <p>&copy; {new Date().getFullYear()} Besuchermanagement System</p>
+        </footer>
+      </div>
+    </ThemeProvider>
   )
 }
 
