@@ -4,29 +4,30 @@ import VisitorForm from './components/VisitorForm'
 import SearchBar from './components/SearchBar'
 import VisitorList from './components/VisitorList'
 import Stats from './components/Stats'
+import type { Visitor, FilterType } from './types'
 
 const STORAGE_KEY = 'visitor-management-data'
 
 function App() {
-  const [visitors, setVisitors] = useState(() => {
+  const [visitors, setVisitors] = useState<Visitor[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     return saved ? JSON.parse(saved) : []
   })
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filter, setFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [filter, setFilter] = useState<FilterType>('all')
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(visitors))
   }, [visitors])
 
-  const addVisitor = (visitor) => {
+  const addVisitor = (visitor: Visitor) => {
     setVisitors(prev => [visitor, ...prev])
   }
 
-  const checkOutVisitor = (id) => {
+  const checkOutVisitor = (id: number) => {
     setVisitors(prev => prev.map(visitor =>
       visitor.id === id
-        ? { ...visitor, status: 'checked-out', checkOutTime: new Date().toISOString() }
+        ? { ...visitor, status: 'checked-out' as const, checkOutTime: new Date().toISOString() }
         : visitor
     ))
   }

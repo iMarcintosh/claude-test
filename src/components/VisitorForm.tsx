@@ -1,7 +1,12 @@
 import { useState } from 'react'
+import type { Visitor, VisitorFormData } from '../types'
 
-function VisitorForm({ onAddVisitor }) {
-  const [formData, setFormData] = useState({
+interface VisitorFormProps {
+  onAddVisitor: (visitor: Visitor) => void;
+}
+
+function VisitorForm({ onAddVisitor }: VisitorFormProps) {
+  const [formData, setFormData] = useState<VisitorFormData>({
     name: '',
     company: '',
     contactPerson: '',
@@ -9,12 +14,12 @@ function VisitorForm({ onAddVisitor }) {
     badge: ''
   })
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!formData.name || !formData.contactPerson || !formData.reason) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.')
@@ -102,7 +107,7 @@ function VisitorForm({ onAddVisitor }) {
             name="reason"
             value={formData.reason}
             onChange={handleChange}
-            rows="3"
+            rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Geschäftstermin, Wartung, Lieferung..."
           />
