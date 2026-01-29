@@ -1,4 +1,10 @@
-function Stats({ visitors }) {
+import type { Visitor } from '../types'
+
+interface StatsProps {
+  visitors: Visitor[];
+}
+
+function Stats({ visitors }: StatsProps) {
   const totalVisitors = visitors.length
   const checkedIn = visitors.filter(v => v.status === 'checked-in').length
   const checkedOut = visitors.filter(v => v.status === 'checked-out').length

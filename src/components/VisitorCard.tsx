@@ -1,5 +1,12 @@
-function VisitorCard({ visitor, onCheckOut }) {
-  const formatTime = (isoString) => {
+import type { Visitor } from '../types'
+
+interface VisitorCardProps {
+  visitor: Visitor;
+  onCheckOut: (id: number) => void;
+}
+
+function VisitorCard({ visitor, onCheckOut }: VisitorCardProps) {
+  const formatTime = (isoString: string | null): string => {
     if (!isoString) return '-'
     return new Date(isoString).toLocaleString('de-DE', {
       day: '2-digit',

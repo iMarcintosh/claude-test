@@ -1,4 +1,13 @@
-function SearchBar({ searchTerm, onSearchChange, filter, onFilterChange }) {
+import type { FilterType } from '../types'
+
+interface SearchBarProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  filter: FilterType;
+  onFilterChange: (filter: FilterType) => void;
+}
+
+function SearchBar({ searchTerm, onSearchChange, filter, onFilterChange }: SearchBarProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row gap-4">
       <div className="flex-1">

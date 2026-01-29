@@ -1,6 +1,12 @@
 import VisitorCard from './VisitorCard'
+import type { Visitor } from '../types'
 
-function VisitorList({ visitors, onCheckOut }) {
+interface VisitorListProps {
+  visitors: Visitor[];
+  onCheckOut: (id: number) => void;
+}
+
+function VisitorList({ visitors, onCheckOut }: VisitorListProps) {
   if (visitors.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
